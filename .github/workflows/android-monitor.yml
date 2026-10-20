@@ -1,0 +1,40 @@
+name: Compilar Acertt AI Monitor v1.1
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Instalar API 35
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Preparar fontes
+        run: |
+          base64 -d monitor-android-source.b64 > /tmp/monitor.zip
+          unzip -oq /tmp/monitor.zip -d .
+          find app/src/main -type f
+      - name: Compilar APK
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Acertt_AI_Monitor_v1_1_APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
