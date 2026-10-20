@@ -20,7 +20,10 @@ jobs:
       - name: Instalar API 35
         run: |
           echo "SDK em $ANDROID_HOME"
-          if command -v sdkmanager >/dev/null; then sdkmanager "platforms;android-35" "build-tools;35.0.0"; else "$ANDROID_HOME/cmdline-tools/16.0/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"; fi
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)
+          echo "sdkmanager: $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
