@@ -17,7 +17,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
@@ -29,7 +28,12 @@ jobs:
           test -f control-src/app/src/main/java/br/com/acerttcar/monitor/MainActivity.java
       - name: Instalar Android SDK 35
         run: |
-          yes | sdkmanager 'platforms;android-35' 'build-tools;35.0.0' || true
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export ANDROID_SDK_ROOT=$ANDROID_HOME
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)
+          test -n "$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" 'platforms;android-35' 'build-tools;35.0.0'
       - name: Compilar Acertt AI Control
         run: gradle -p control-src :app:assembleDebug --no-daemon
       - name: Publicar APK
