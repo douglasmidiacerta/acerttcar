@@ -1,0 +1,35 @@
+name: Build Acertt AI Control v1.6 (isolated unsigned)
+on:
+  push:
+    branches: [fix/acertt-control-v16-diagnostic]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Extract v1.6 code
+        run: |
+          base64 -d build-input/control-v16.b64 > control-v16.zip
+          unzip -oq control-v16.zip -d .
+          test -f app/src/main/java/br/com/acerttcar/monitor/MainActivity.java
+      - name: Install Android tools
+        run: yes | sdkmanager "platforms;android-35" "build-tools;35.0.0" || true
+      - name: Compile v1.6 release (unsigned)
+        run: gradle --no-daemon :app:assembleRelease
+      - name: Publish unsigned release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AcerttAIControl-v16-unsigned
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
