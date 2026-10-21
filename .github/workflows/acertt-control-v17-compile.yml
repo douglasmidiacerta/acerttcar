@@ -1,0 +1,39 @@
+name: Verificar compilacao Acertt AI Control v1.7
+on:
+  push:
+    branches: [fix/acertt-control-v17-progresso]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Extrair codigo v1.7
+        run: |
+          base64 -d acertt-control-v17-source.b64 > fonte.zip
+          unzip -oq fonte.zip -d .
+          grep 'versionCode 17' app/build.gradle
+      - name: Preparar ferramentas Android
+        run: |
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
+      - name: Compilar release
+        run: gradle --no-daemon :app:assembleRelease
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AcerttAIControl-v17-build
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
