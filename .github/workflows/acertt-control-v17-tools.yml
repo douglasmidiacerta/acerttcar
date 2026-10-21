@@ -1,0 +1,23 @@
+name: Android signing utility for local release
+on:
+  push:
+    branches: [fix/acertt-control-v17-progresso]
+permissions:
+  contents: read
+jobs:
+  tools:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Android SDK signing tool
+        run: |
+          P=$(find "$ANDROID_HOME/build-tools" -name apksigner.jar -type f | head -n 1)
+          test -n "$P"
+          cp "$P" android-apksigner.jar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AndroidSDKSigningTool-v17
+          path: android-apksigner.jar
+          if-no-files-found: error
