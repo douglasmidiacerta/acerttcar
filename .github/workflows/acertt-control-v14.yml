@@ -1,0 +1,43 @@
+name: Acertt AI Control v1.4 - Migração
+on:
+  push:
+    branches: [acertt-control-v14-migracao]
+    paths:
+      - 'control-v14-source.b64'
+      - '.github/workflows/acertt-control-v14.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair fonte
+        run: |
+          base64 -d control-v14-source.b64 > project.zip
+          unzip -oq project.zip -d .
+          test -f app/build.gradle
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Preparar SDK Android
+        run: |
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Compilar APK de teste
+        run: gradle --no-daemon :app:assembleDebug
+      - name: Arquivar APK de teste
+        uses: actions/upload-artifact@v4
+        with:
+          name: AcerttAIControl-v1_4-debug-NOT-FOR-INSTALL
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
