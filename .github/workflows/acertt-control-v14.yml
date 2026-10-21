@@ -34,14 +34,14 @@ jobs:
         with:
           gradle-version: '8.7'
       - name: Compilar APK de teste
-        run: gradle --no-daemon :app:assembleDebug
+        run: gradle --no-daemon :app:assembleRelease
       - name: Copiar ferramenta de assinatura para assinatura local
-        run: cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" app/build/outputs/apk/debug/apksigner.jar
+        run: cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" app/build/outputs/apk/release/apksigner.jar
       - name: Arquivar APK de teste
         uses: actions/upload-artifact@v4
         with:
-          name: AcerttAIControl-v1_4-debug-NOT-FOR-INSTALL
+          name: AcerttAIControl-v1_4-unsigned-release-LOCAL-SIGN
           path: |
-            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/release/app-release-unsigned.apk
             app/build/outputs/apk/debug/apksigner.jar
           if-no-files-found: error
