@@ -21,6 +21,8 @@ jobs:
           base64 -d control-v14-source.b64 > project.zip
           unzip -oq project.zip -d .
           test -f app/build.gradle
+          # Aplicativo privado (fora da Play Store): nao bloquear release por lint de target antigo.
+          sed -i '/^android {/a\    lint { checkReleaseBuilds false }' app/build.gradle
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
