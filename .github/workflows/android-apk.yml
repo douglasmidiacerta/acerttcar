@@ -1,40 +1,33 @@
-name: Compilar APK Acertt AI Monitor
+name: Compilar Control v1.5 (sem assinatura)
 on:
   push:
-    branches: [main]
+    branches: [acertt-control-v1-5-diagnostico]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      ANDROID_HOME: /usr/local/lib/android/sdk
-      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
     steps:
       - uses: actions/checkout@v4
-      - name: Extrair projeto fonte
-        run: |
-          base64 -d android-source.b64 > app-source.zip
-          unzip -oq app-source.zip -d .
-          test -f app/build.gradle
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - name: Preparar SDK Android
+      - name: Extrair codigo fonte
         run: |
-          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)
-          echo "SDK manager: $SDKMANAGER"
-          yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
+          base64 -d android-source.b64 > source.zip
+          unzip -oq source.zip -d .
+          test -f app/build.gradle
+      - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
-      - name: Compilar APK
-        run: gradle --no-daemon :app:assembleDebug
+      - run: yes | sdkmanager 'platforms;android-35' 'build-tools;35.0.0' || true
+      - name: Compilar APK release
+        run: gradle --no-daemon :app:assembleRelease
       - uses: actions/upload-artifact@v4
         with:
-          name: Acertt_AI_Monitor_APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: AcerttAIControl-v15-unsigned
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
           if-no-files-found: error
