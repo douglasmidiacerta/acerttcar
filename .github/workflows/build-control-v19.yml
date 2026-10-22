@@ -1,0 +1,38 @@
+name: Acertt AI Control v1.9 - Build unsigned
+on:
+  push:
+    branches:
+      - fix/acertt-control-v19-estabilidade
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Prepare Android SDK
+        run: yes | sdkmanager 'platforms;android-35' 'build-tools;35.0.0' || true
+      - name: Extract validated v1.9 source
+        run: |
+          base64 -d android-v19-source.b64 > /tmp/acertt-v19.zip
+          unzip -q -o /tmp/acertt-v19.zip -d .
+          grep -q "versionCode 19" app/build.gradle
+          grep -q "AcerttAI-Bridge/1.9" app/src/main/assets/cloudflare-bridge.py
+      - name: Compile unsigned release
+        run: gradle --no-daemon :app:assembleRelease
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AcerttAIControl-v19-unsigned
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
+          retention-days: 10
